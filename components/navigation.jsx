@@ -10,7 +10,11 @@ import { Button } from "react-native";
 const NavigationBar = ({ selectedTab, setSelectedTab }) => {
   return (
     <View className="flex-row items-center w-full px-3 mt-1">
-      <TouchableOpacity className="justify-center items-center w-18 h-18 p-1">
+      <TouchableOpacity
+        style={selectedTab === 3}
+        onPress={() => setSelectedTab(3)}
+        className="justify-center items-center w-18 h-18 p-1"
+      >
         <Image
           className="w-14 h-14 mr-1.5"
           source={require("../assets/images/Logo.png")}

@@ -3,6 +3,7 @@ import { useFonts } from "expo-font";
 import { TouchableOpacity, ScrollView } from "react-native";
 import NavigationBar from "../components/navigation";
 import React, { useState } from "react";
+import Maps from "../components/Maps";
 
 export default function App() {
   const [fontsLoaded, error] = useFonts({
@@ -14,13 +15,13 @@ export default function App() {
   const renderTabContent = () => {
     switch (selectedTab) {
       case 0:
-        return <Text>Home Content</Text>;
+        return <Text>Planning</Text>;
       case 1:
-        return <Text>Profile Content</Text>;
+        return <Text>News</Text>;
       case 2:
-        return <Text>Settings Content</Text>;
+        return <Text>Profile</Text>;
       case 3:
-        return <Text>About Content</Text>;
+        return <Text>This is the logo buttonz</Text>; //<Maps />;
       default:
         return <Text>Home Content</Text>;
     }
