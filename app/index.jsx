@@ -21,7 +21,7 @@ export default function App() {
       case 2:
         return <Text>Profile</Text>;
       case 3:
-        return <Text>This is the logo buttonz</Text>; //<Maps />;
+        return <Maps />; // <Text>This is the logo buttonz</Text>;
       default:
         return <Text>Home Content</Text>;
     }
