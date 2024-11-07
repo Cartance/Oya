@@ -4,11 +4,30 @@ import { TouchableOpacity, ScrollView } from "react-native";
 import NavigationBar from "../components/navigation";
 import React, { useState } from "react";
 import Maps from "../components/Maps";
+import * as Location from "expo-location";
+import { useEffect } from "react";
+import { UserLocationContext } from "../components/UserLocationContext";
 
 export default function App() {
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const [fontsLoaded, error] = useFonts({
     bolota: require("../assets/fonts/bolota-bold.ttf"),
   });
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+  }, []);
 
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -21,19 +40,22 @@ export default function App() {
       case 2:
         return <Text>Profile</Text>;
       case 3:
-        return <Maps />; // <Text>This is the logo buttonz</Text>;
+        return <Maps />; //logo button
       default:
         return <Text>Home Content</Text>;
     }
   };
 
   return (
-    <View className="flex-1 bg-off">
-      <NavigationBar
-        selectedTab={selectedTab}
-        setSelectedTab={setSelectedTab}
-      />
-      <View>{renderTabContent()}</View>
-    </View>
+    <UserLocationContext.Provider value={{ location, setLocation }}>
+      <View className="flex-1 bg-off">
+        <NavigationBar
+          selectedTab={selectedTab}
+          setSelectedTab={setSelectedTab}
+          className="font-bolota"
+        />
+        <View>{renderTabContent()}</View>
+      </View>
+    </UserLocationContext.Provider>
   );
 }

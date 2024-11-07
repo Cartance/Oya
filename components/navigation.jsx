@@ -8,6 +8,10 @@ import { Image } from "expo-image";
 import { Button } from "react-native";
 
 const NavigationBar = ({ selectedTab, setSelectedTab }) => {
+  const [loaded, error] = useFonts({
+    bolota: require("../assets/fonts/bolota-bold.ttf"),
+  });
+
   return (
     <View className="flex-row items-center w-full px-3 mt-1">
       <TouchableOpacity
@@ -29,9 +33,9 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
         <TouchableOpacity
           style={selectedTab === 0}
           onPress={() => setSelectedTab(0)}
-          className="bg-satin flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
+          className="bg-satin flex-grow h-12 rounded-full mx-2 my-1"
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-1">
+          <Text className="text-white font-bolota text-2xl mx-5 mt-2">
             Planning
           </Text>
         </TouchableOpacity>
@@ -41,7 +45,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
           onPress={() => setSelectedTab(1)}
           className="bg-mustard flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-1">
+          <Text className="text-white font-bolota text-2xl mx-5 mt-0">
             News
           </Text>
         </TouchableOpacity>
@@ -51,7 +55,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
           onPress={() => setSelectedTab(2)}
           className="bg-violetBlue flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-1">
+          <Text className="text-white font-bolota text-2xl mx-5 mt-0">
             Profile
           </Text>
         </TouchableOpacity>
