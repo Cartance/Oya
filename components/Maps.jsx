@@ -6,19 +6,42 @@ import {
   ScrollView,
   TouchableOpacity,
   Text,
+  Image,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView from "react-native-maps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import "react-native-get-random-values";
+import AnimatedMarker from "./AnimatedMarker";
+
+const LocationCard = ({ place, onPress, isSelected }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    style={[styles.locationCard, isSelected && styles.selectedLocationCard]}
+  >
+    <Text style={styles.locationName} numberOfLines={1}>
+      {place.name}
+    </Text>
+    <View style={styles.locationDetails}>
+      <View style={styles.locationPin}>
+        <View style={styles.pinDot} />
+      </View>
+      <Text style={styles.locationAddress} numberOfLines={2}>
+        {`${place.lat.toFixed(4)}, ${place.lng.toFixed(4)}`}
+      </Text>
+    </View>
+  </TouchableOpacity>
+);
 
 const GooglePlacesMap = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [selectedCardIndex, setSelectedCardIndex] = useState(null);
   const mapRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  const [key, setKey] = useState(0);
 
   const initialRegion = {
-    latitude: 37.78825,
     latitude: 35.6586,
     longitude: 139.7454,
     latitudeDelta: 0.0922,
@@ -33,21 +56,38 @@ const GooglePlacesMap = () => {
     { label: "Parks", type: "park" },
   ];
 
-  const animateToRegion = (location) => {
+  const animateToRegion = (location, index = null) => {
+    // Animate map to the selected location
     mapRef.current?.animateToRegion(
       {
         latitude: location.lat,
         longitude: location.lng,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
+        latitudeDelta: 0.02, // Zoom in more for card selection
+        longitudeDelta: 0.02,
       },
       1000
     );
+
+    // If index is provided, scroll the cards to center the selected one
+    if (index !== null && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: index * (CARD_WIDTH + 20), // card width + margin
+        animated: true,
+      });
+    }
+  };
+
+  const handleCardPress = (place, index) => {
+    setSelectedCardIndex(index);
+    animateToRegion(place);
   };
 
   const searchNearbyPlaces = async (type) => {
     try {
-      // Get the current map center
+      setNearbyPlaces([]);
+      setSelectedCardIndex(null);
+      setKey((prev) => prev + 1);
+
       const region = mapRef.current.__lastRegion || initialRegion;
 
       const response = await fetch(
@@ -55,13 +95,34 @@ const GooglePlacesMap = () => {
       );
 
       const data = await response.json();
+      let places = [];
 
       if (data.results) {
-        const places = data.results.map((place) => ({
+        places = data.results.map((place) => ({
           lat: place.geometry.location.lat,
           lng: place.geometry.location.lng,
           name: place.name,
         }));
+
+        if (data.next_page_token && places.length < 40) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          const nextResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${data.next_page_token}&key=${GOOGLE_PLACES_API_KEY}`
+          );
+
+          const nextData = await nextResponse.json();
+
+          if (nextData.results) {
+            const nextPlaces = nextData.results.map((place) => ({
+              lat: place.geometry.location.lat,
+              lng: place.geometry.location.lng,
+              name: place.name,
+            }));
+
+            places = [...places, ...nextPlaces].slice(0, 40);
+          }
+        }
 
         setNearbyPlaces(places);
       }
@@ -82,13 +143,16 @@ const GooglePlacesMap = () => {
           fetchDetails={true}
           onPress={(data, details = null) => {
             if (details) {
-              setSelectedLocation({
+              const location = {
                 lat: details.geometry.location.lat,
                 lng: details.geometry.location.lng,
                 name: details.name,
-              });
-              setNearbyPlaces([]); // Clear previous nearby places
-              animateToRegion(details.geometry.location);
+              };
+              setSelectedLocation(location);
+              setNearbyPlaces([]);
+              setSelectedCardIndex(null);
+              setKey((prev) => prev + 1);
+              animateToRegion(location);
             }
           }}
           query={{
@@ -107,7 +171,6 @@ const GooglePlacesMap = () => {
         />
       </View>
 
-      {/* Category buttons */}
       <ScrollView
         horizontal
         style={styles.categoryContainer}
@@ -126,30 +189,56 @@ const GooglePlacesMap = () => {
 
       <MapView ref={mapRef} style={styles.map} initialRegion={initialRegion}>
         {selectedLocation && (
-          <Marker
+          <AnimatedMarker
+            key={`selected-${key}`}
             coordinate={{
               latitude: selectedLocation.lat,
               longitude: selectedLocation.lng,
             }}
             title={selectedLocation.name}
-            pinColor="red"
+            pinColor="#FF3B30"
+            index={0}
           />
         )}
         {nearbyPlaces.map((place, index) => (
-          <Marker
-            key={index}
+          <AnimatedMarker
+            key={`${index}-${key}`}
             coordinate={{
               latitude: place.lat,
               longitude: place.lng,
             }}
             title={place.name}
-            pinColor="blue"
+            pinColor="#007AFF"
+            index={index}
           />
         ))}
       </MapView>
+
+      {nearbyPlaces.length > 0 && (
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          style={styles.locationCardsContainer}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_WIDTH + 20}
+          snapToAlignment="center"
+          decelerationRate="fast"
+        >
+          {nearbyPlaces.map((place, index) => (
+            <LocationCard
+              key={index}
+              place={place}
+              onPress={() => handleCardPress(place, index)}
+              isSelected={selectedCardIndex === index}
+            />
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };
+
+const CARD_WIDTH = Dimensions.get("window").width * 0.8;
 
 const styles = StyleSheet.create({
   container: {
@@ -202,9 +291,9 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     position: "absolute",
-    top: 90,
-    zIndex: 1,
-    paddingHorizontal: 10,
+    top: 40,
+    zIndex: 2,
+    marginHorizontal: 12,
   },
   categoryButton: {
     backgroundColor: "white",
@@ -212,6 +301,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     marginHorizontal: 5,
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+  },
+  locationCardsContainer: {
+    position: "absolute",
+    top: 600,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 10,
+  },
+  locationCard: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 15,
+    width: CARD_WIDTH,
+    marginHorizontal: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -221,10 +329,39 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  categoryButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
+  selectedLocationCard: {
+    borderColor: "#007AFF",
+    borderWidth: 2,
+  },
+  locationName: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
     color: "#333",
+  },
+  locationDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  locationPin: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  pinDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#007AFF",
+  },
+  locationAddress: {
+    fontSize: 14,
+    color: "#666",
+    flex: 1,
   },
 });
 
