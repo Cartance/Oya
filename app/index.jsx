@@ -1,16 +1,35 @@
-import { Text, View } from "react-native";
+import { Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useFonts } from "expo-font";
-import { TouchableOpacity, ScrollView } from "react-native";
 import NavigationBar from "../components/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Maps from "../components/Maps";
 import * as Location from "expo-location";
-import { useEffect } from "react";
 import { UserLocationContext } from "../components/UserLocationContext";
+import NewsPage from "../components/News";
+
+const SplashScreenComponent = ({ onPress }) => {
+  return (
+    <View className="flex-1 bg-white items-center justify-center">
+      <Image
+        source={require("../assets/splash.png")} // Make sure to add your splash image
+        className="w-64 h-64 mb-8"
+        resizeMode="contain"
+      />
+      <TouchableOpacity
+        onPress={onPress}
+        className="bg-blue-500 px-8 py-4 rounded-full"
+      >
+        <Text className="text-white text-lg font-bold">Get Started</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export default function App() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
+  const [selectedTab, setSelectedTab] = useState(0);
 
   const [fontsLoaded, error] = useFonts({
     bolota: require("../assets/fonts/bolota-bold.ttf"),
@@ -23,28 +42,37 @@ export default function App() {
         setErrorMsg("Permission to access location was denied");
         return;
       }
-
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
     })();
   }, []);
 
-  const [selectedTab, setSelectedTab] = useState(0);
+  const handleSplashButtonPress = () => {
+    setShowSplash(false);
+  };
 
   const renderTabContent = () => {
     switch (selectedTab) {
       case 0:
         return <Text>Planning</Text>;
       case 1:
-        return <Text>News</Text>;
+        return <NewsPage />;
       case 2:
         return <Text>Profile</Text>;
       case 3:
-        return <Maps />; //logo button
+        return <Maps />;
       default:
         return <Text>Home Content</Text>;
     }
   };
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  if (showSplash) {
+    return <SplashScreenComponent onPress={handleSplashButtonPress} />;
+  }
 
   return (
     <UserLocationContext.Provider value={{ location, setLocation }}>
@@ -54,7 +82,9 @@ export default function App() {
           setSelectedTab={setSelectedTab}
           className="font-bolota"
         />
-        <View>{renderTabContent()}</View>
+        <ScrollView className="flex-1">
+          <View>{renderTabContent()}</View>
+        </ScrollView>
       </View>
     </UserLocationContext.Provider>
   );
