@@ -13,7 +13,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
   });
 
   return (
-    <View className="flex-row items-center w-full px-3 mt-1">
+    <View className="flex-row items-center w-full px-3 mt-10">
       <TouchableOpacity
         style={selectedTab === 3}
         onPress={() => setSelectedTab(3)}
@@ -28,7 +28,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="my-14"
+        className="my-5"
       >
         <TouchableOpacity
           style={selectedTab === 0}

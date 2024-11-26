@@ -1,3 +1,5 @@
+// MAP.JSX
+
 import React, { useState, useRef } from "react";
 import {
   View,
@@ -14,6 +16,7 @@ import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplet
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import "react-native-get-random-values";
 import AnimatedMarker from "./AnimatedMarker";
+import { TouchableWithoutFeedback, Keyboard } from "react-native";
 
 const LocationCard = ({ place, onPress, isSelected }) => {
   const defaultImage =
@@ -189,121 +192,123 @@ const GooglePlacesMap = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <GooglePlacesAutocomplete
-          placeholder="Search for a place"
-          minLength={2}
-          autoFocus={false}
-          returnKeyType={"search"}
-          listViewDisplayed={false}
-          fetchDetails={true}
-          onPress={(data, details = null) => {
-            if (details) {
-              const location = {
-                lat: details.geometry.location.lat,
-                lng: details.geometry.location.lng,
-                name: details.name,
-                // Add additional details from the place
-                photos: details.photos,
-                rating: details.rating,
-                vicinity: details.vicinity,
-                opening_hours: details.opening_hours,
-                price_level: details.price_level,
-              };
-              setSelectedLocation(location);
-              setNearbyPlaces([]);
-              setSelectedCardIndex(null);
-              setKey((prev) => prev + 1);
-              animateToRegion(location);
-            }
-          }}
-          query={{
-            key: GOOGLE_PLACES_API_KEY,
-            language: "en",
-            components: "country:jp",
-          }}
-          styles={{
-            container: styles.autocompleteContainer,
-            textInput: styles.searchInput,
-            listView: styles.listView,
-          }}
-          enablePoweredByContainer={false}
-          nearbyPlacesAPI="GooglePlacesSearch"
-          debounce={100}
-        />
-      </View>
-
-      <ScrollView
-        horizontal
-        style={styles.categoryContainer}
-        showsHorizontalScrollIndicator={false}
-      >
-        {placeTypes.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.categoryButton}
-            onPress={() => searchNearbyPlaces(item.type)}
-          >
-            <Text style={styles.categoryButtonText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <MapView ref={mapRef} style={styles.map} initialRegion={initialRegion}>
-        {selectedLocation && (
-          <AnimatedMarker
-            key={`selected-${key}`}
-            coordinate={{
-              latitude: selectedLocation.lat,
-              longitude: selectedLocation.lng,
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <GooglePlacesAutocomplete
+            placeholder="Search for a place"
+            minLength={2}
+            autoFocus={false}
+            returnKeyType={"search"}
+            listViewDisplayed={false}
+            fetchDetails={true}
+            onPress={(data, details = null) => {
+              if (details) {
+                const location = {
+                  lat: details.geometry.location.lat,
+                  lng: details.geometry.location.lng,
+                  name: details.name,
+                  // Add additional details from the place
+                  photos: details.photos,
+                  rating: details.rating,
+                  vicinity: details.vicinity,
+                  opening_hours: details.opening_hours,
+                  price_level: details.price_level,
+                };
+                setSelectedLocation(location);
+                setNearbyPlaces([]);
+                setSelectedCardIndex(null);
+                setKey((prev) => prev + 1);
+                animateToRegion(location);
+              }
             }}
-            title={selectedLocation.name}
-            pinColor="#FF3B30"
-            index={0}
-          />
-        )}
-        {nearbyPlaces.map((place, index) => (
-          <AnimatedMarker
-            key={`${index}-${key}`}
-            coordinate={{
-              latitude: place.lat,
-              longitude: place.lng,
+            query={{
+              key: GOOGLE_PLACES_API_KEY,
+              language: "en",
+              components: "country:jp",
             }}
-            title={place.name}
-            pinColor="#007AFF"
-            index={index}
+            styles={{
+              container: styles.autocompleteContainer,
+              textInput: styles.searchInput,
+              listView: styles.listView,
+            }}
+            enablePoweredByContainer={false}
+            nearbyPlacesAPI="GooglePlacesSearch"
+            debounce={100}
           />
-        ))}
-      </MapView>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
         </View>
-      ) : (
-        nearbyPlaces.length > 0 && (
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal
-            style={styles.locationCardsContainer}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={CARD_WIDTH + 20}
-            snapToAlignment="center"
-            decelerationRate="fast"
-          >
-            {nearbyPlaces.map((place, index) => (
-              <LocationCard
-                key={index}
-                place={place}
-                onPress={() => handleCardPress(place, index)}
-                isSelected={selectedCardIndex === index}
-              />
-            ))}
-          </ScrollView>
-        )
-      )}
-    </View>
+
+        <ScrollView
+          horizontal
+          style={styles.categoryContainer}
+          showsHorizontalScrollIndicator={false}
+        >
+          {placeTypes.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.categoryButton}
+              onPress={() => searchNearbyPlaces(item.type)}
+            >
+              <Text style={styles.categoryButtonText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <MapView ref={mapRef} style={styles.map} initialRegion={initialRegion}>
+          {selectedLocation && (
+            <AnimatedMarker
+              key={`selected-${key}`}
+              coordinate={{
+                latitude: selectedLocation.lat,
+                longitude: selectedLocation.lng,
+              }}
+              title={selectedLocation.name}
+              pinColor="#FF3B30"
+              index={0}
+            />
+          )}
+          {nearbyPlaces.map((place, index) => (
+            <AnimatedMarker
+              key={`${index}-${key}`}
+              coordinate={{
+                latitude: place.lat,
+                longitude: place.lng,
+              }}
+              title={place.name}
+              pinColor="#007AFF"
+              index={index}
+            />
+          ))}
+        </MapView>
+
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        ) : (
+          nearbyPlaces.length > 0 && (
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              style={styles.locationCardsContainer}
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_WIDTH + 20}
+              snapToAlignment="center"
+              decelerationRate="fast"
+            >
+              {nearbyPlaces.map((place, index) => (
+                <LocationCard
+                  key={index}
+                  place={place}
+                  onPress={() => handleCardPress(place, index)}
+                  isSelected={selectedCardIndex === index}
+                />
+              ))}
+            </ScrollView>
+          )
+        )}
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -313,20 +318,24 @@ const CARD_HEIGHT = 220;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    top: 135,
   },
   searchContainer: {
     position: "absolute",
     width: "100%",
-    zIndex: 1,
+    zIndex: 2,
+    top: -5,
   },
   autocompleteContainer: {
-    flex: 0,
+    flex: 1,
     width: "95%",
     alignSelf: "center",
-    marginTop: 10,
+    marginTop: 15,
     borderRadius: 20,
+    zIndex: 2,
   },
   searchInput: {
+    zIndex: 2,
     height: 50,
     borderRadius: 25,
     paddingHorizontal: 10,
@@ -339,7 +348,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    bottom: 30,
+    bottom: 0,
   },
   listView: {
     backgroundColor: "white",
@@ -357,13 +366,12 @@ const styles = StyleSheet.create({
   map: {
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height,
-    bottom: 35,
   },
   categoryContainer: {
     position: "absolute",
-    top: 40,
-    zIndex: 2,
-    marginHorizontal: 12,
+    top: 67,
+    zIndex: 1,
+    marginHorizontal: 0,
   },
   categoryButton: {
     backgroundColor: "white",
@@ -379,7 +387,7 @@ const styles = StyleSheet.create({
   },
   locationCardsContainer: {
     position: "absolute",
-    top: 475,
+    top: 510,
     left: 0,
     right: 0,
     paddingHorizontal: 10,

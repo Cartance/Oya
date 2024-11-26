@@ -11,8 +11,8 @@ const SplashScreenComponent = ({ onPress }) => {
   return (
     <View className="flex-1 bg-white items-center justify-center">
       <Image
-        source={require("../assets/splash.png")} // Make sure to add your splash image
-        className="w-64 h-64 mb-8"
+        source={require("../assets/splash.png")}
+        className="w-64 h-64 mb-4"
         resizeMode="contain"
       />
       <TouchableOpacity
@@ -30,7 +30,6 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
   const [selectedTab, setSelectedTab] = useState(0);
-
   const [fontsLoaded, error] = useFonts({
     bolota: require("../assets/fonts/bolota-bold.ttf"),
   });
@@ -56,11 +55,19 @@ export default function App() {
       case 0:
         return <Text>Planning</Text>;
       case 1:
-        return <NewsPage />;
+        return (
+          <View>
+            <NewsPage />
+          </View>
+        );
       case 2:
         return <Text>Profile</Text>;
       case 3:
-        return <Maps />;
+        return (
+          <View className="absolute top-0 left-0 right-0 bottom-20">
+            <Maps />
+          </View>
+        );
       default:
         return <Text>Home Content</Text>;
     }
@@ -76,15 +83,28 @@ export default function App() {
 
   return (
     <UserLocationContext.Provider value={{ location, setLocation }}>
-      <View className="flex-1 bg-off">
-        <NavigationBar
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
-          className="font-bolota"
-        />
-        <ScrollView className="flex-1">
-          <View>{renderTabContent()}</View>
-        </ScrollView>
+      <View className="flex-1">
+        {selectedTab === 3 ? (
+          <>
+            {renderTabContent()}
+            <NavigationBar
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              className="font-bolota absolute bottom-0"
+            />
+          </>
+        ) : (
+          <>
+            <NavigationBar
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              className="font-bolota"
+            />
+            <ScrollView className="flex-1">
+              <View>{renderTabContent()}</View>
+            </ScrollView>
+          </>
+        )}
       </View>
     </UserLocationContext.Provider>
   );
