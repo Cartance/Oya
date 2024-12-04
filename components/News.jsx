@@ -1,4 +1,4 @@
-// App.js
+// News.jsx
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -14,8 +14,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { NEWSDATA_KEY } from "@env";
-import NewsPage from "./NewsPage";
-import { navigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 const API_URL = "https://newsdata.io/api/1/news";
 
@@ -30,6 +29,7 @@ const categories = [
 ];
 
 export default function App() {
+  const navigation = useNavigation();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -84,7 +84,7 @@ export default function App() {
       <TouchableOpacity
         style={[styles.card, cardStyle]}
         onPress={() => {
-          <NewsPage />;
+          navigation.navigate("NewsPage", { article });
         }}
       >
         <Image

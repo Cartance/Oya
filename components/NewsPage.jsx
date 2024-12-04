@@ -28,19 +28,15 @@ const NewsPage = ({ route, navigation }) => {
     }
   };
 
-  const openArticleInBrowser = async () => {
+  const handleReadMore = () => {
     if (article.link) {
-      try {
-        await Linking.openURL(article.link);
-      } catch (error) {
-        console.error("Error opening URL:", error);
-      }
+      Linking.openURL(article.link);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header with back button and share */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -54,65 +50,55 @@ const NewsPage = ({ route, navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Main Content */}
+        {/* Main content */}
         <View style={styles.content}>
-          {/* Article Image */}
+          <Text style={styles.category}>{article.category?.toUpperCase()}</Text>
+          <Text style={styles.title}>{article.title}</Text>
+
+          <View style={styles.sourceInfo}>
+            <Text style={styles.source}>{article.source_id}</Text>
+            <Text style={styles.date}>
+              {new Date(article.pubDate).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </Text>
+          </View>
+
           <Image
             source={{ uri: article.image_url || defaultImage }}
             style={styles.image}
             resizeMode="cover"
           />
 
-          {/* Article Details */}
-          <View style={styles.articleDetails}>
-            <Text style={styles.title}>{article.title}</Text>
+          <Text style={styles.description}>{article.description}</Text>
 
-            <View style={styles.metadata}>
-              <Text style={styles.source}>{article.source_id}</Text>
-              <Text style={styles.date}>
-                {new Date(article.pubDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </Text>
-            </View>
+          {article.content && (
+            <Text style={styles.content}>{article.content}</Text>
+          )}
 
-            {article.creator && (
-              <Text style={styles.author}>
-                By{" "}
-                {Array.isArray(article.creator)
-                  ? article.creator.join(", ")
-                  : article.creator}
-              </Text>
-            )}
-
-            {/* Article Content */}
-            <Text style={styles.description}>{article.description}</Text>
-
-            {article.content && (
-              <Text style={styles.content}>{article.content}</Text>
-            )}
-
-            {/* Categories/Keywords */}
-            {article.keywords && (
-              <View style={styles.categoryContainer}>
-                {article.keywords.map((keyword, index) => (
-                  <View key={index} style={styles.categoryTag}>
-                    <Text style={styles.categoryText}>{keyword}</Text>
+          {/* Keywords/Topics */}
+          {article.keywords && (
+            <View style={styles.keywordsContainer}>
+              <Text style={styles.keywordsTitle}>Related Topics:</Text>
+              <View style={styles.keywordsList}>
+                {article.keywords.split(",").map((keyword, index) => (
+                  <View key={index} style={styles.keywordChip}>
+                    <Text style={styles.keywordText}>{keyword.trim()}</Text>
                   </View>
                 ))}
               </View>
-            )}
+            </View>
+          )}
 
-            {/* Read More Button */}
-            <TouchableOpacity
-              style={styles.readMoreButton}
-              onPress={openArticleInBrowser}
-            >
-              <Text style={styles.readMoreText}>Read Full Article</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Read More Button */}
+          <TouchableOpacity
+            style={styles.readMoreButton}
+            onPress={handleReadMore}
+          >
+            <Text style={styles.readMoreText}>Read Full Article</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -126,7 +112,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  scrollContainer: {
+  scrollContent: {
     flexGrow: 1,
   },
   header: {
@@ -136,7 +122,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: "#eee",
   },
   backButton: {
     padding: 8,
@@ -145,26 +131,26 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   content: {
-    flex: 1,
-  },
-  image: {
-    width: windowWidth,
-    height: 300,
-  },
-  articleDetails: {
     padding: 16,
+  },
+  category: {
+    fontSize: 14,
+    color: "#0066cc",
+    fontWeight: "600",
+    marginBottom: 8,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 12,
+    lineHeight: 32,
   },
-  metadata: {
+  sourceInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   source: {
     fontSize: 14,
@@ -175,39 +161,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  author: {
-    fontSize: 14,
-    color: "#666",
+  image: {
+    width: windowWidth - 32,
+    height: 250,
+    borderRadius: 12,
     marginBottom: 16,
-    fontStyle: "italic",
   },
   description: {
     fontSize: 16,
-    color: "#333",
     lineHeight: 24,
+    color: "#333",
     marginBottom: 16,
   },
   content: {
     fontSize: 16,
-    color: "#333",
     lineHeight: 24,
+    color: "#444",
     marginBottom: 24,
   },
-  categoryContainer: {
+  keywordsContainer: {
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  keywordsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  keywordsList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 24,
   },
-  categoryTag: {
+  keywordChip: {
     backgroundColor: "#f0f0f0",
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
+    margin: 4,
   },
-  categoryText: {
-    fontSize: 12,
+  keywordText: {
+    fontSize: 14,
     color: "#666",
   },
   readMoreButton: {
@@ -216,6 +210,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: "center",
     marginTop: 8,
+    marginBottom: 24,
   },
   readMoreText: {
     color: "#fff",

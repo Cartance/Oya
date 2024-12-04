@@ -5,7 +5,8 @@ import React, { useState, useEffect } from "react";
 import Maps from "../components/Maps";
 import * as Location from "expo-location";
 import { UserLocationContext } from "../components/UserLocationContext";
-import NewsPage from "../components/News";
+import News from "../components/News";
+import Exchange from "../components/Exchange";
 
 const SplashScreenComponent = ({ onPress }) => {
   return (
@@ -55,13 +56,9 @@ export default function App() {
       case 0:
         return <Text>Planning</Text>;
       case 1:
-        return (
-          <View>
-            <NewsPage />
-          </View>
-        );
+        return <News />;
       case 2:
-        return <Text>Profile</Text>;
+        return <Exchange />;
       case 3:
         return (
           <View className="absolute top-0 left-0 right-0 bottom-20">

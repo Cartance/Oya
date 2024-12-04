@@ -56,7 +56,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
           className="bg-violetBlue flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
         >
           <Text className="text-white font-bolota text-2xl mx-5 mt-0">
-            Profile
+            Exchange
           </Text>
         </TouchableOpacity>
       </ScrollView>
