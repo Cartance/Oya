@@ -15,7 +15,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { NEWSDATA_KEY } from "@env";
 import NewsPage from "./NewsPage";
-import { navigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native"; // Changed this line
 
 const API_URL = "https://newsdata.io/api/1/news";
 
@@ -29,12 +29,13 @@ const categories = [
 ];
 
 export default function App() {
+  const navigation = useNavigation(); // Add this line
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("top");
-  const [topNews, setTopNews] = useState([]); // For horizontal scroll view
+  const [topNews, setTopNews] = useState([]);
 
   const fetchNews = async (category = selectedCategory) => {
     try {

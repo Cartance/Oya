@@ -6,7 +6,6 @@ import { useFonts } from "expo-font";
 import { TouchableOpacity, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { Button } from "react-native";
-import { Link } from "expo-router";
 
 const NavigationBar = ({ selectedTab, setSelectedTab }) => {
   return (
