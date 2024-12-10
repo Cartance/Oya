@@ -16,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { NEWSDATA_KEY } from "@env";
 import NewsPage from "./NewsPage";
 import { useNavigation } from "@react-navigation/native"; // Changed this line
+import { useFonts } from "expo-font";
 
 const API_URL = "https://newsdata.io/api/1/news";
 
@@ -148,39 +149,42 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Top Stories</Text>
-      <View style={{ marginTop: -45 }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalScrollContent}
-        >
-          {topNews.map((article, index) => (
-            <NewsCard key={index} article={article} horizontal={true} />
-          ))}
-        </ScrollView>
-      </View>
-      {/* Category Selector */}
-      <CategorySelector />
-
-      {/* Category News Vertical ScrollView */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+    <View>
+      <View style={styles.container}>
+        <View style={{ marginTop: -20 }}>
+          <Text style={styles.sectionTitle}>Top Stories</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+          >
+            {topNews.map((article, index) => (
+              <NewsCard key={index} article={article} horizontal={true} />
+            ))}
+          </ScrollView>
         </View>
-      ) : (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.verticalScrollContent}
-        >
-          {news.map((article, index) => (
-            <NewsCard key={index} article={article} horizontal={false} />
-          ))}
-        </ScrollView>
-      )}
+        {/* Category Selector */}
+        <Text style={styles.sectionTitle2}>Categories</Text>
+        <CategorySelector />
+
+        {/* Category News Vertical ScrollView */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        ) : (
+          <ScrollView
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            contentContainerStyle={styles.verticalScrollContent}
+          >
+            {news.map((article, index) => (
+              <NewsCard key={index} article={article} horizontal={false} />
+            ))}
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 }
@@ -210,11 +214,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     zIndex: 2,
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 30,
+    fontFamily: "bolota",
     color: "#333",
     padding: 16,
     paddingBottom: 8,
+  },
+  sectionTitle2: {
+    zIndex: 2,
+    fontSize: 30,
+    fontFamily: "bolota",
+    color: "#333",
+    paddingTop: 8,
+    paddingLeft: 20,
   },
   horizontalScrollContent: {
     padding: 16,
