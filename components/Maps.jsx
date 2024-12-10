@@ -1,6 +1,6 @@
 // MAP.JSX
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -10,81 +10,135 @@ import {
   Text,
   Image,
   ActivityIndicator,
+  Animated,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import MapView from "react-native-maps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { GOOGLE_PLACES_API_KEY } from "@env";
 import "react-native-get-random-values";
 import AnimatedMarker from "./AnimatedMarker";
-import { TouchableWithoutFeedback, Keyboard } from "react-native";
 
-const LocationCard = ({ place, onPress, isSelected }) => {
+const CARD_WIDTH = Dimensions.get("window").width * 0.8;
+const CARD_HEIGHT = 220;
+
+const LocationCard = ({ place, onPress, isSelected, index }) => {
   const defaultImage =
     "https://maps.gstatic.com/tactile/pane/default_geocode-2x.png";
+  const slideAnim = useRef(new Animated.Value(400)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.delay(index * 50),
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 7,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 50,
+          friction: 7,
+        }),
+      ]),
+    ]).start();
+  }, [index]);
+
+  const getPhotoUrl = () => {
+    if (place.photos?.[0]?.photo_reference) {
+      return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`;
+    }
+    return defaultImage;
+  };
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[styles.locationCard, isSelected && styles.selectedLocationCard]}
+    <Animated.View
+      style={[{ transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }]}
     >
-      <View style={styles.cardImageContainer}>
-        {place.photos ? (
+      <TouchableOpacity
+        onPress={onPress}
+        style={[styles.locationCard, isSelected && styles.selectedLocationCard]}
+      >
+        <View style={styles.cardImageContainer}>
           <Image
-            source={{
-              uri: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`,
-            }}
+            source={{ uri: getPhotoUrl() }}
             style={styles.cardImage}
             resizeMode="cover"
           />
-        ) : (
-          <Image
-            source={{ uri: defaultImage }}
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
-        )}
-      </View>
+        </View>
 
-      <View style={styles.cardContent}>
-        <Text style={styles.locationName} numberOfLines={1}>
-          {place.name}
-        </Text>
+        <View style={styles.cardContent}>
+          <Text style={styles.locationName} numberOfLines={1}>
+            {place.name}
+          </Text>
 
-        {place.rating && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>★ {place.rating}</Text>
-            <Text style={styles.ratingCount}>
-              ({place.user_ratings_total || 0})
+          {(place.rating || place.rating === 0) && (
+            <View style={styles.ratingContainer}>
+              <Text style={styles.ratingText}>★ {place.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingCount}>
+                ({place.user_ratings_total || 0})
+              </Text>
+            </View>
+          )}
+
+          {place.vicinity && (
+            <Text style={styles.locationAddress} numberOfLines={2}>
+              {place.vicinity}
             </Text>
-          </View>
-        )}
+          )}
 
-        {place.vicinity && (
-          <Text style={styles.locationAddress} numberOfLines={2}>
-            {place.vicinity}
-          </Text>
-        )}
+          {place.opening_hours && (
+            <Text
+              style={[
+                styles.openStatus,
+                place.opening_hours.open_now
+                  ? styles.openNow
+                  : styles.closedNow,
+              ]}
+            >
+              {place.opening_hours.open_now ? "Open Now" : "Closed"}
+            </Text>
+          )}
 
-        {place.opening_hours && (
-          <Text
-            style={[
-              styles.openStatus,
-              place.opening_hours.open_now ? styles.openNow : styles.closedNow,
-            ]}
-          >
-            {place.opening_hours.open_now ? "Open Now" : "Closed"}
-          </Text>
-        )}
-
-        {place.price_level && (
-          <Text style={styles.priceLevel}>{"$".repeat(place.price_level)}</Text>
-        )}
-      </View>
-    </TouchableOpacity>
+          {(place.price_level || place.price_level === 0) && (
+            <Text style={styles.priceLevel}>
+              {"$".repeat(place.price_level + 1)}
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
-const GooglePlacesMap = () => {
+const AnimatedCategoryButton = ({ label, onPress, index }) => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      delay: index * 100,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  }, [index]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity style={styles.categoryButton} onPress={onPress}>
+        <Text style={styles.categoryButtonText}>{label}</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+const GooglePlacesMap = ({ navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
   const [selectedCardIndex, setSelectedCardIndex] = useState(null);
@@ -92,6 +146,7 @@ const GooglePlacesMap = () => {
   const mapRef = useRef(null);
   const scrollViewRef = useRef(null);
   const [key, setKey] = useState(0);
+  const searchBarAnim = useRef(new Animated.Value(-100)).current;
 
   const initialRegion = {
     latitude: 35.6586,
@@ -108,6 +163,15 @@ const GooglePlacesMap = () => {
     { label: "Parks", type: "park" },
   ];
 
+  useEffect(() => {
+    Animated.spring(searchBarAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  }, []);
+
   const getPlaceDetails = async (placeId) => {
     try {
       const response = await fetch(
@@ -122,12 +186,14 @@ const GooglePlacesMap = () => {
   };
 
   const animateToRegion = (location, index = null) => {
+    if (!location?.lat || !location?.lng) return;
+
     mapRef.current?.animateToRegion(
       {
         latitude: location.lat,
         longitude: location.lng,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
+        latitudeDelta: 0.003,
+        longitudeDelta: 0.003,
       },
       1000
     );
@@ -140,12 +206,22 @@ const GooglePlacesMap = () => {
     }
   };
 
-  const handleCardPress = (place, index) => {
-    setSelectedCardIndex(index);
-    animateToRegion(place);
+  const handleCardPress = async (place, index) => {
+    if (!place || !navigation) return;
+
+    try {
+      const details = await getPlaceDetails(place.place_id);
+
+      // Navigate to a Details screen with the fetched data
+      navigation.navigate("Details", { placeDetails: details });
+    } catch (error) {
+      console.error("Error fetching place details:", error);
+    }
   };
 
   const searchNearbyPlaces = async (type) => {
+    if (!mapRef.current) return;
+
     try {
       setIsLoading(true);
       setNearbyPlaces([]);
@@ -159,10 +235,8 @@ const GooglePlacesMap = () => {
       );
 
       const data = await response.json();
-      let places = [];
 
       if (data.results) {
-        // Process first page of results with full details
         const detailedPlaces = await Promise.all(
           data.results.slice(0, 20).map(async (place) => {
             const details = await getPlaceDetails(place.place_id);
@@ -173,16 +247,13 @@ const GooglePlacesMap = () => {
               photos: details?.photos || place.photos,
               website: details?.website,
               formatted_phone_number: details?.formatted_phone_number,
-              // Keep existing place data and add any additional details
               opening_hours: details?.opening_hours || place.opening_hours,
               price_level: details?.price_level || place.price_level,
             };
           })
         );
 
-        places = detailedPlaces;
-
-        setNearbyPlaces(places);
+        setNearbyPlaces(detailedPlaces);
       }
     } catch (error) {
       console.error("Error fetching nearby places:", error);
@@ -194,7 +265,12 @@ const GooglePlacesMap = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
-        <View style={styles.searchContainer}>
+        <Animated.View
+          style={[
+            styles.searchContainer,
+            { transform: [{ translateY: searchBarAnim }] },
+          ]}
+        >
           <GooglePlacesAutocomplete
             placeholder="Search for a place"
             minLength={2}
@@ -203,23 +279,26 @@ const GooglePlacesMap = () => {
             listViewDisplayed={false}
             fetchDetails={true}
             onPress={(data, details = null) => {
-              if (details) {
-                const location = {
+              if (details?.geometry?.location) {
+                const searchedPlace = {
+                  place_id: details.place_id,
+                  name: details.name,
                   lat: details.geometry.location.lat,
                   lng: details.geometry.location.lng,
-                  name: details.name,
-                  // Add additional details from the place
                   photos: details.photos,
                   rating: details.rating,
-                  vicinity: details.vicinity,
+                  user_ratings_total: details.user_ratings_total,
+                  vicinity: details.formatted_address || details.vicinity,
                   opening_hours: details.opening_hours,
                   price_level: details.price_level,
                 };
-                setSelectedLocation(location);
-                setNearbyPlaces([]);
-                setSelectedCardIndex(null);
+
+                setSelectedLocation(searchedPlace);
+                // Set the searched place as the only item in nearbyPlaces
+                setNearbyPlaces([searchedPlace]);
+                setSelectedCardIndex(0);
                 setKey((prev) => prev + 1);
-                animateToRegion(location);
+                animateToRegion(searchedPlace, 0);
               }
             }}
             query={{
@@ -234,9 +313,9 @@ const GooglePlacesMap = () => {
             }}
             enablePoweredByContainer={false}
             nearbyPlacesAPI="GooglePlacesSearch"
-            debounce={100}
+            debounce={300}
           />
-        </View>
+        </Animated.View>
 
         <ScrollView
           horizontal
@@ -244,13 +323,12 @@ const GooglePlacesMap = () => {
           showsHorizontalScrollIndicator={false}
         >
           {placeTypes.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.categoryButton}
+            <AnimatedCategoryButton
+              key={item.type}
+              label={item.label}
               onPress={() => searchNearbyPlaces(item.type)}
-            >
-              <Text style={styles.categoryButtonText}>{item.label}</Text>
-            </TouchableOpacity>
+              index={index}
+            />
           ))}
         </ScrollView>
 
@@ -269,7 +347,7 @@ const GooglePlacesMap = () => {
           )}
           {nearbyPlaces.map((place, index) => (
             <AnimatedMarker
-              key={`${index}-${key}`}
+              key={`${place.place_id}-${key}`}
               coordinate={{
                 latitude: place.lat,
                 longitude: place.lng,
@@ -290,18 +368,43 @@ const GooglePlacesMap = () => {
             <ScrollView
               ref={scrollViewRef}
               horizontal
-              style={styles.locationCardsContainer}
+              style={[
+                styles.locationCardsContainer,
+                nearbyPlaces.length === 1 && styles.singleCardContainer,
+              ]}
+              contentContainerStyle={
+                nearbyPlaces.length === 1 && {
+                  flex: 1,
+                  justifyContent: "center",
+                  width: Dimensions.get("window").width,
+                }
+              }
               showsHorizontalScrollIndicator={false}
               snapToInterval={CARD_WIDTH + 20}
               snapToAlignment="center"
               decelerationRate="fast"
+              scrollEnabled={nearbyPlaces.length > 1}
+              onScroll={(event) => {
+                if (nearbyPlaces.length === 1) return;
+                const offsetX = event.nativeEvent.contentOffset.x;
+                const index = Math.round(offsetX / (CARD_WIDTH + 20));
+                if (index !== selectedCardIndex) {
+                  setSelectedCardIndex(index);
+                  const focusedPlace = nearbyPlaces[index];
+                  if (focusedPlace) {
+                    animateToRegion(focusedPlace);
+                  }
+                }
+              }}
+              scrollEventThrottle={16}
             >
               {nearbyPlaces.map((place, index) => (
                 <LocationCard
-                  key={index}
+                  key={place.place_id}
                   place={place}
                   onPress={() => handleCardPress(place, index)}
                   isSelected={selectedCardIndex === index}
+                  index={index}
                 />
               ))}
             </ScrollView>
@@ -311,9 +414,6 @@ const GooglePlacesMap = () => {
     </TouchableWithoutFeedback>
   );
 };
-
-const CARD_WIDTH = Dimensions.get("window").width * 0.8;
-const CARD_HEIGHT = 220;
 
 const styles = StyleSheet.create({
   container: {
@@ -381,16 +481,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   categoryButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "500",
     color: "#333",
+    fontFamily: "bolota",
   },
   locationCardsContainer: {
     position: "absolute",
-    top: 510,
+    top: 520,
     left: 0,
     right: 0,
-    paddingHorizontal: 10,
+  },
+  locationCardsContainer2: {
+    position: "absolute",
+    top: 520,
+    left: 0,
+    right: 0,
   },
   locationCard: {
     backgroundColor: "white",
@@ -422,7 +528,9 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   cardContent: {
-    padding: 15,
+    paddingBottom: 10,
+    paddingLeft: 10,
+    paddingTop: 11,
   },
   locationName: {
     fontSize: 16,
@@ -475,6 +583,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     marginHorizontal: 20,
+  },
+  singleCardContainer: {
+    left: 0,
+    right: 0,
+    paddingHorizontal: 0,
   },
 });
 

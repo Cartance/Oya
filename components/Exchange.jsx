@@ -1,5 +1,4 @@
-// App.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
@@ -10,20 +9,60 @@ import {
   Modal,
   SafeAreaView,
   ActivityIndicator,
+  Animated,
+  Easing,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { EXCHANGE_KEY } from "@env";
 
 const CurrencyExchangeApp = () => {
+  // Existing state
   const [amount, setAmount] = useState("100");
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("EUR");
   const [exchangeRate, setExchangeRate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const [selectingCurrency, setSelectingCurrency] = useState("from"); // 'from' or 'to'
+  const [selectingCurrency, setSelectingCurrency] = useState("from");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Start entrance animation when component mounts
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.out(Easing.back(1.5)),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const animateButtonPress = () => {
+    Animated.sequence([
+      Animated.timing(buttonScaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const popularCurrencies = [
     { code: "USD", name: "US Dollar" },
@@ -37,6 +76,7 @@ const CurrencyExchangeApp = () => {
   ];
 
   const fetchExchangeRate = async () => {
+    animateButtonPress();
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -50,7 +90,6 @@ const CurrencyExchangeApp = () => {
 
       const data = await response.json();
       if (data.length > 0) {
-        // Use the first rate in the returned array
         setExchangeRate(data[0].rate);
       } else {
         console.error("No rates available for the selected currencies.");
@@ -107,12 +146,27 @@ const CurrencyExchangeApp = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <Text style={styles.headerTitle}>Currency Exchange</Text>
-      </View>
+      </Animated.View>
 
-      <View style={styles.card}>
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
         <View style={styles.inputContainer}>
           <Text style={styles.label}>You send</Text>
           <View style={styles.row}>
@@ -144,11 +198,16 @@ const CurrencyExchangeApp = () => {
             1 {fromCurrency} = {exchangeRate.toFixed(4)} {toCurrency}
           </Text>
         )}
-      </View>
+      </Animated.View>
 
-      <TouchableOpacity style={styles.button} onPress={fetchExchangeRate}>
-        <Text style={styles.buttonText}>Get Rate</Text>
-      </TouchableOpacity>
+      <Animated.View
+        style={[
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }, { scale: buttonScaleAnim }],
+          },
+        ]}
+      ></Animated.View>
 
       <Modal
         visible={showCurrencyModal}
@@ -214,6 +273,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
+    fontFamily: "bolota",
   },
   card: {
     margin: 16,

@@ -10,6 +10,12 @@ module.exports = {
         violet: "#983F85",
         mustard: "#C98707",
         cultured: "#F7F7F7",
+        Momo: "#87193a",
+        Rings: "#0fd79c",
+        DDD1: "#2a3aa1",
+        DDD2: "#5715c6",
+        DDD3: "#f76613",
+        DDD4: "#3a8d9e",
       },
       fontFamily: {
         // paste your font family inside here

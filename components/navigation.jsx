@@ -6,12 +6,9 @@ import { useFonts } from "expo-font";
 import { TouchableOpacity, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { Button } from "react-native";
+import { Link } from "expo-router";
 
 const NavigationBar = ({ selectedTab, setSelectedTab }) => {
-  const [loaded, error] = useFonts({
-    bolota: require("../assets/fonts/bolota-bold.ttf"),
-  });
-
   return (
     <View className="flex-row items-center w-full px-3 mt-10">
       <TouchableOpacity
@@ -21,7 +18,7 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
       >
         <Image
           className="w-14 h-14 mr-1.5"
-          source={require("../assets/images/Logo.png")}
+          source={require("../assets/images/MomoIconCapstoneFYP5.png")}
         />
       </TouchableOpacity>
 
@@ -33,9 +30,9 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
         <TouchableOpacity
           style={selectedTab === 0}
           onPress={() => setSelectedTab(0)}
-          className="bg-satin flex-grow h-12 rounded-full mx-2 my-1"
+          className="bg-DDD3 flex-grow h-12 rounded-full mx-2 my-1 "
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-2">
+          <Text className="text-white text-2xl mx-5 mt-2" style={styles.button}>
             Planning
           </Text>
         </TouchableOpacity>
@@ -43,9 +40,12 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
         <TouchableOpacity
           style={selectedTab === 1}
           onPress={() => setSelectedTab(1)}
-          className="bg-mustard flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
+          className="bg-DDD2 flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-0">
+          <Text
+            className="text-white font-bolota text-2xl mx-5 mt-0"
+            style={styles.button}
+          >
             News
           </Text>
         </TouchableOpacity>
@@ -53,9 +53,9 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
         <TouchableOpacity
           style={selectedTab === 2}
           onPress={() => setSelectedTab(2)}
-          className="bg-violetBlue flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
+          className="bg-DDD4 flex-grow h-12 items-center justify-center rounded-full mx-2 my-1"
         >
-          <Text className="text-white font-bolota text-2xl mx-5 mt-0">
+          <Text className="text-white text-2xl mx-5 mt-0" style={styles.button}>
             Exchange
           </Text>
         </TouchableOpacity>
@@ -65,3 +65,9 @@ const NavigationBar = ({ selectedTab, setSelectedTab }) => {
 };
 
 export default NavigationBar;
+
+const styles = StyleSheet.create({
+  button: {
+    fontFamily: "bolota",
+  },
+});

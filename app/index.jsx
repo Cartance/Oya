@@ -54,9 +54,7 @@ export default function App() {
   const renderTabContent = () => {
     switch (selectedTab) {
       case 0:
-        return <Text>Planning</Text>;
-      case 1:
-        return <News />;
+        return;
       case 2:
         return <Exchange />;
       case 3:
@@ -66,7 +64,7 @@ export default function App() {
           </View>
         );
       default:
-        return <Text>Home Content</Text>;
+        return <News />;
     }
   };
 
